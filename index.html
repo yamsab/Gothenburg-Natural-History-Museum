@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#244d38">
+<title>Biodiversity Discovery Trail</title>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+:root{
+  --bg:#f3f6ef;--card:#fff;--ink:#173629;--muted:#647268;
+  --green:#2f6f4e;--green2:#214e38;--soft:#e2ece2;--gold:#d5b45c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+main{max-width:600px;margin:auto;padding:20px 18px 50px}
+.topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px}
+.langbtn{padding:9px 12px;border-radius:999px;border:1px solid #ced8cf;background:white;color:var(--ink);font-weight:800;cursor:pointer}
+.langbtn.active{background:var(--green);color:white;border-color:var(--green)}
+.hero{padding:10px 2px 10px}
+.eyebrow{font-size:.82rem;letter-spacing:.05em;font-weight:800;color:var(--green)}
+h1{font-size:2rem;line-height:1.08;margin:.35rem 0 .55rem}
+.hero p{color:#405348;margin:.2rem 0 1rem;line-height:1.45}
+.card{background:var(--card);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 7px 28px #0000000b}
+.challenge-card{background:linear-gradient(145deg,#1d4a34,#3c7453);color:white}
+.challenge-card p{color:#eef6f0}
+.challenge-card .secondary{background:white;color:var(--green2)}
+.progress{height:12px;background:#e4e8e2;border-radius:999px;overflow:hidden;margin-top:10px}
+.bar{height:100%;background:linear-gradient(90deg,var(--green2),var(--green));width:0;transition:.35s ease}
+.task{display:flex;gap:13px;align-items:flex-start}
+.icon{font-size:29px;line-height:1.1;margin-top:2px}
+.task h3{margin:0 0 4px;font-size:1.07rem}
+.task p{margin:0 0 12px;color:var(--muted);line-height:1.35}
+.done{outline:2px solid #a8c4ad}
+button,.btn{
+  border:0;border-radius:14px;padding:12px 15px;background:var(--green);color:#fff;
+  font-weight:750;font-size:.96rem;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px
+}
+button.secondary{background:var(--soft);color:var(--ink)}
+button.ghost{background:#f7f9f6;color:var(--ink);border:1px solid #d8e0d8}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.notice{padding:14px 15px;border-radius:15px;margin:12px 0;background:#e8f3e9;color:#234832;font-weight:650}
+.notice.error{background:#f9e7e7;color:#7c2222}
+.hidden{display:none!important}
+#reader{width:100%;overflow:hidden;border-radius:16px;background:#111}
+#reader video{border-radius:16px}
+.scan-help,.small{font-size:.88rem;color:var(--muted);line-height:1.45}
+#cert{
+  background:
+    radial-gradient(circle at 20% 10%,#6e987b33,transparent 30%),
+    linear-gradient(145deg,#173d2d,#315f45);
+  color:white;border-radius:24px;padding:30px 20px;text-align:center;min-height:450px;
+  display:flex;flex-direction:column;justify-content:center;border:5px solid #e7d7a033
+}
+#cert .seal{font-size:68px}
+#cert h2{font-size:2.25rem;margin:.3rem 0}
+#cert h3{font-size:1.45rem;margin:.35rem 0 .6rem}
+#cert small{opacity:.88}
+input{width:100%;padding:13px 14px;border:1px solid #cfd8d0;border-radius:13px;font-size:1rem}
+.badge{font-size:.78rem;font-weight:800;background:#e4efe6;color:#2a5a3d;padding:5px 9px;border-radius:999px;display:inline-block}
+.challenge-box{border:2px dashed #aac2ae;border-radius:16px;padding:14px;margin-top:14px;background:#fbfcfa}
+.challenge-link{font-size:.86rem;word-break:break-all;color:var(--green2);font-weight:700}
+.footer{font-size:.79rem;color:#7a867e;text-align:center;margin-top:22px}
+</style>
+</head>
+
+<body>
+<main>
+
+<div class="topbar">
+  <button id="svBtn" class="langbtn active" onclick="setLang('sv')">Svenska</button>
+  <button id="enBtn" class="langbtn" onclick="setLang('en')">English</button>
+</div>
+
+<section class="hero">
+  <div class="eyebrow" data-i18n="museum">🌿 GÖTEBORGS NATURHISTORISKA MUSEUM — PROTOTYP</div>
+  <h1 data-i18n="title">Upptäck biologisk mångfald</h1>
+  <p data-i18n="subtitle">Utforska. Hitta utställningen. Skanna QR-koden. Klara alla fem utmaningar och lås upp ett digitalt Biodiversity Explorer-diplom.</p>
+</section>
+
+<div id="challengeInvite" class="card challenge-card hidden">
+  <div style="font-size:2rem">🎯</div>
+  <h2 style="margin:.4rem 0" data-i18n="challengedTitle">Du har blivit utmanad!</h2>
+  <p id="challengeFrom"></p>
+  <p data-i18n="challengedBody">Kan du hitta och klara alla fem uppdrag? Besök Göteborgs Naturhistoriska Museum och skanna QR-koderna vid utställningarna.</p>
+  <div class="row">
+    <button class="secondary" onclick="document.getElementById('tasks').scrollIntoView({behavior:'smooth'})" data-i18n="seeChallenges">Se utmaningarna</button>
+  </div>
+</div>
+
+<div id="message" class="notice hidden"></div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+    <b id="count">0/5 klara</b><span class="badge" data-i18n="prototype">Prototyp</span>
+  </div>
+  <div class="progress"><div id="bar" class="bar"></div></div>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0" data-i18n="scanTitle">Skanna en QR-kod</h2>
+  <p class="scan-help" data-i18n="scanHelp">Använd kameran i appen eller skanna en av museets QR-koder med mobilens vanliga kamera. Båda metoderna sparar dina framsteg på den här enheten.</p>
+  <div class="row">
+    <button id="startScanBtn" onclick="startScanner()" data-i18n="openCamera">📷 Öppna kameraskannern</button>
+    <button id="stopScanBtn" class="secondary hidden" onclick="stopScanner()" data-i18n="stopScanner">Stoppa skannern</button>
+  </div>
+  <div id="reader" class="hidden" style="margin-top:14px"></div>
+  <p id="scanStatus" class="small" data-i18n="cameraNote">Kameran kräver HTTPS och kamerabehörighet. GitHub Pages använder redan HTTPS.</p>
+</div>
+
+<div id="tasks"></div>
+
+<div id="award" class="card hidden">
+  <div id="cert">
+    <div class="seal">🏆</div>
+    <div style="font-size:.8rem;letter-spacing:.09em;font-weight:800" data-i18n="achievement">DIGITAL PRESTATION</div>
+    <h2>Biodiversity Explorer</h2>
+    <p style="margin:.5rem 0" data-i18n="certifies">Detta intygar att</p>
+    <h3 id="visitor">Museibesökare</h3>
+    <p data-i18n="completedAll">har klarat alla 5 utmaningar om biologisk mångfald.</p>
+    <div style="font-size:1.45rem;margin:10px 0">🐦 🐟 🐞 🌱 🌍</div>
+    <small data-i18n="certFooter">Göteborgs Naturhistoriska Museum • Discovery Trail-prototyp</small>
+  </div>
+
+  <div style="margin-top:14px">
+    <input id="name" placeholder="Ditt namn (valfritt)" maxlength="40" oninput="setName()">
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <button onclick="downloadCertificate()" data-i18n="saveCert">⬇️ Spara diplom</button>
+    <button class="secondary" onclick="shareCertificate()" data-i18n="shareCert">📤 Dela prestationen</button>
+  </div>
+
+  <div class="challenge-box">
+    <h3 style="margin-top:0" data-i18n="challengeFriendTitle">🎯 Utmana en vän</h3>
+    <p data-i18n="challengeFriendBody">Du klarade alla fem. Vem av dina vänner kan göra samma sak? Dela länken så att de kan besöka museet och försöka själva.</p>
+    <input id="challengerName" placeholder="Ditt namn (valfritt)">
+    <div class="row" style="margin-top:10px">
+      <button onclick="shareChallenge()" data-i18n="challengeFriendBtn">Utmana en vän</button>
+      <button class="secondary" onclick="copyChallengeLink()" data-i18n="copyLink">Kopiera länk</button>
+    </div>
+    <p id="challengeLinkText" class="challenge-link"></p>
+    <p class="small" data-i18n="challengeNote">Länken öppnar en utmaningssida. Själva uppdragen måste fortfarande genomföras på museet genom att skanna QR-koderna.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0" data-i18n="controls">Prototypkontroller</h3>
+  <button class="ghost" onclick="resetTrail()" data-i18n="reset">Återställ framsteg på den här enheten</button>
+  <p class="small" data-i18n="storageNote">Den här demon sparar framsteg lokalt i webbläsaren. En riktig museiversion bör verifiera QR-koderna på en backend.</p>
+</div>
+
+<div class="footer" data-i18n="footer">Utbildningsprototyp • Inga system eller webbsidor hos museet ändras.</div>
+</main>
+
+<script>
+const BASE_URL = "https://yamsab.github.io/Gothenburg-Natural-History-Museum/";
+
+const TEXT = {
+  sv:{
+    museum:"🌿 GÖTEBORGS NATURHISTORISKA MUSEUM — PROTOTYP",
+    title:"Upptäck biologisk mångfald",
+    subtitle:"Utforska. Hitta utställningen. Skanna QR-koden. Klara alla fem utmaningar och lås upp ett digitalt Biodiversity Explorer-diplom.",
+    challengedTitle:"Du har blivit utmanad!",
+    challengedBody:"Kan du hitta och klara alla fem uppdrag? Besök Göteborgs Naturhistoriska Museum och skanna QR-koderna vid utställningarna.",
+    challengedFromDefault:"En vän har utmanat dig att klara alla fem uppdrag.",
+    challengedFromNamed:n=>`${n} har utmanat dig att klara alla fem uppdrag.`,
+    seeChallenges:"Se utmaningarna",
+    prototype:"Prototyp",
+    scanTitle:"Skanna en QR-kod",
+    scanHelp:"Använd kameran i appen eller skanna en av museets QR-koder med mobilens vanliga kamera. Båda metoderna sparar dina framsteg på den här enheten.",
+    openCamera:"📷 Öppna kameraskannern",
+    stopScanner:"Stoppa skannern",
+    cameraNote:"Kameran kräver HTTPS och kamerabehörighet. GitHub Pages använder redan HTTPS.",
+    achievement:"DIGITAL PRESTATION",
+    certifies:"Detta intygar att",
+    completedAll:"har klarat alla 5 utmaningar om biologisk mångfald.",
+    certFooter:"Göteborgs Naturhistoriska Museum • Discovery Trail-prototyp",
+    saveCert:"⬇️ Spara diplom",
+    shareCert:"📤 Dela prestationen",
+    challengeFriendTitle:"🎯 Utmana en vän",
+    challengeFriendBody:"Du klarade alla fem. Vem av dina vänner kan göra samma sak? Dela länken så att de kan besöka museet och försöka själva.",
+    challengeFriendBtn:"Utmana en vän",
+    copyLink:"Kopiera länk",
+    challengeNote:"Länken öppnar en utmaningssida. Själva uppdragen måste fortfarande genomföras på museet genom att skanna QR-koderna.",
+    controls:"Prototypkontroller",
+    reset:"Återställ framsteg på den här enheten",
+    storageNote:"Den här demon sparar framsteg lokalt i webbläsaren. En riktig museiversion bör verifiera QR-koderna på en backend.",
+    footer:"Utbildningsprototyp • Inga system eller webbsidor hos museet ändras.",
+    namePlaceholder:"Ditt namn (valfritt)",
+    challengerPlaceholder:"Ditt namn (valfritt)",
+    completed:n=>`${n}/5 klara`,
+    challengeStatusDone:"Klar",
+    challengeStatusTodo:"Hitta och skanna QR-koden",
+    invalidQR:"Den här QR-koden känns inte igen som en giltig kod för Discovery Trail.",
+    invalidTrail:"QR-koden innehåller ingen giltig Discovery Trail-länk.",
+    alreadyDone:title=>`✅ ${title} var redan klar på den här enheten.`,
+    newlyDone:(title,n)=>`✅ ${title} klar! Du har nu ${n}/5.`,
+    resetConfirm:"Vill du återställa alla slutförda utmaningar på den här enheten?",
+    resetDone:"Framstegen har återställts.",
+    cameraFail:"Kameran kunde inte starta. Tillåt kameraåtkomst eller skanna QR-koden med mobilens vanliga kamera.",
+    libraryFail:"Kamerabiblioteket kunde inte laddas. Du kan fortfarande skanna de tryckta QR-koderna med mobilens vanliga kamera.",
+    copied:"Utmaningslänken har kopierats.",
+    copyFail:"Kunde inte kopiera länken automatiskt.",
+    certShareText:"🏆 Jag klarade alla fem utmaningar i Biodiversity Discovery Trail! Klarar du dem också? Besök museet och anta utmaningen:",
+    challengeShareText:name=>name ? `🎯 ${name} utmanar dig: Klarar du alla fem uppdrag i Biodiversity Discovery Trail? Besök Göteborgs Naturhistoriska Museum och försök!` : "🎯 Jag utmanar dig: Klarar du alla fem uppdrag i Biodiversity Discovery Trail? Besök Göteborgs Naturhistoriska Museum och försök!",
+    museumVisitor:"Museibesökare",
+    taskNames:{
+      bird:["Gömda dioramat","Hitta det historiska fågeldioramat och upptäck en art.","🐦"],
+      fish:["Livet under ytan","Hitta fiskutställningen och identifiera en anpassning.","🐟"],
+      insect:["Små men viktiga","Upptäck varför insekter är viktiga för den biologiska mångfalden.","🐞"],
+      conservation:["Berättelsen om bevarande","Hitta ett exempel på hur arter eller livsmiljöer skyddas.","🌱"],
+      gothenburg:["Göteborgskopplingen","Hitta en berättelse om biologisk mångfald med koppling till Göteborg.","🌍"]
+    }
+  },
+  en:{
+    museum:"🌿 GOTHENBURG NATURAL HISTORY MUSEUM — PROTOTYPE",
+    title:"Biodiversity Discovery Trail",
+    subtitle:"Explore. Find the exhibit. Scan the QR code. Complete all five challenges and unlock a digital Biodiversity Explorer certificate.",
+    challengedTitle:"You have been challenged!",
+    challengedBody:"Can you find and complete all five challenges? Visit the Gothenburg Natural History Museum and scan the QR codes at the exhibits.",
+    challengedFromDefault:"A friend has challenged you to complete all five challenges.",
+    challengedFromNamed:n=>`${n} has challenged you to complete all five challenges.`,
+    seeChallenges:"See the challenges",
+    prototype:"Prototype",
+    scanTitle:"Scan a trail QR code",
+    scanHelp:"Use the scanner inside the app or scan one of the museum QR codes with your phone's normal camera. Both methods save progress on this device.",
+    openCamera:"📷 Open camera scanner",
+    stopScanner:"Stop scanner",
+    cameraNote:"Camera scanning requires HTTPS and camera permission. GitHub Pages already provides HTTPS.",
+    achievement:"DIGITAL ACHIEVEMENT",
+    certifies:"This certifies that",
+    completedAll:"completed all 5 biodiversity challenges.",
+    certFooter:"Gothenburg Natural History Museum • Discovery Trail Prototype",
+    saveCert:"⬇️ Save certificate",
+    shareCert:"📤 Share achievement",
+    challengeFriendTitle:"🎯 Challenge a friend",
+    challengeFriendBody:"You completed all five. Which of your friends can do the same? Share the link so they can visit the museum and try it themselves.",
+    challengeFriendBtn:"Challenge a friend",
+    copyLink:"Copy link",
+    challengeNote:"The link opens a challenge invitation. The actual tasks still need to be completed at the museum by scanning the exhibit QR codes.",
+    controls:"Prototype controls",
+    reset:"Reset progress on this device",
+    storageNote:"This demo stores progress locally in the browser. A real museum version should verify QR codes on a backend.",
+    footer:"Educational prototype • No museum systems or website are modified.",
+    namePlaceholder:"Your name (optional)",
+    challengerPlaceholder:"Your name (optional)",
+    completed:n=>`${n}/5 completed`,
+    challengeStatusDone:"Completed",
+    challengeStatusTodo:"Find & scan the QR code",
+    invalidQR:"This QR code is not recognized as a valid Discovery Trail code.",
+    invalidTrail:"That QR code does not contain a valid Discovery Trail link.",
+    alreadyDone:title=>`✅ ${title} was already completed on this device.`,
+    newlyDone:(title,n)=>`✅ ${title} completed! You now have ${n}/5.`,
+    resetConfirm:"Reset all completed challenges on this device?",
+    resetDone:"Progress reset.",
+    cameraFail:"Camera could not start. Allow camera access, or scan the QR with your phone's normal Camera app.",
+    libraryFail:"The camera scanner library did not load. You can still scan the printed QR codes with your phone's normal Camera app.",
+    copied:"Challenge link copied.",
+    copyFail:"Could not automatically copy the link.",
+    certShareText:"🏆 I completed all five Biodiversity Discovery Trail challenges! Can you do it too? Visit the museum and take the challenge:",
+    challengeShareText:name=>name ? `🎯 ${name} challenges you: Can you complete all five Biodiversity Discovery Trail tasks? Visit the Gothenburg Natural History Museum and try!` : "🎯 I challenge you: Can you complete all five Biodiversity Discovery Trail tasks? Visit the Gothenburg Natural History Museum and try!",
+    museumVisitor:"Museum Explorer",
+    taskNames:{
+      bird:["Hidden Diorama","Find the historical bird diorama and discover one species.","🐦"],
+      fish:["Life Below Water","Find the fish exhibit and identify an adaptation.","🐟"],
+      insect:["Tiny but Important","Discover why insects matter to biodiversity.","🐞"],
+      conservation:["Conservation Story","Find an example of how species or habitats are protected.","🌱"],
+      gothenburg:["Gothenburg Connection","Find a biodiversity story connected to Gothenburg.","🌍"]
+    }
+  }
+};
+
+const TASKS = [
+  {id:"bird",token:"BIRD-7FK29"},
+  {id:"fish",token:"FISH-3PX81"},
+  {id:"insect",token:"INSECT-9QM42"},
+  {id:"conservation",token:"SAVE-5TR17"},
+  {id:"gothenburg",token:"GBG-2LN63"}
+];
+
+let lang = localStorage.getItem("bioTrailLang") || "sv";
+let completed = JSON.parse(localStorage.getItem("bioTrailV3") || "[]");
+let scanner = null;
+let scannerRunning = false;
+
+function t(){ return TEXT[lang]; }
+
+function setLang(newLang){
+  lang = newLang;
+  localStorage.setItem("bioTrailLang", lang);
+  document.documentElement.lang = lang;
+  document.getElementById("svBtn").classList.toggle("active", lang==="sv");
+  document.getElementById("enBtn").classList.toggle("active", lang==="en");
+
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const key = el.dataset.i18n;
+    if(typeof t()[key] === "string") el.textContent = t()[key];
+  });
+
+  document.getElementById("name").placeholder = t().namePlaceholder;
+  document.getElementById("challengerName").placeholder = t().challengerPlaceholder;
+  updateChallengeInvite();
+  render();
+  setName();
+}
+
+function save(){ localStorage.setItem("bioTrailV3", JSON.stringify(completed)); }
+
+function flash(text, isError=false){
+  const m = document.getElementById("message");
+  m.textContent = text;
+  m.className = "notice" + (isError ? " error" : "");
+  m.classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+  setTimeout(()=>m.classList.add("hidden"), 4500);
+}
+
+function render(){
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  TASKS.forEach((task,i)=>{
+    const info = t().taskNames[task.id];
+    const done = completed.includes(task.id);
+
+    const div = document.createElement("div");
+    div.className = "card task" + (done ? " done" : "");
+    div.innerHTML = `
+      <div class="icon">${done ? "✅" : info[2]}</div>
+      <div style="flex:1">
+        <h3>${i+1}. ${info[0]}</h3>
+        <p>${info[1]}</p>
+        <span class="badge">${done ? t().challengeStatusDone : t().challengeStatusTodo}</span>
+      </div>`;
+    box.appendChild(div);
+  });
+
+  document.getElementById("count").textContent = t().completed(completed.length);
+  document.getElementById("bar").style.width = `${completed.length/5*100}%`;
+  document.getElementById("award").classList.toggle("hidden", completed.length < 5);
+  document.getElementById("challengeLinkText").textContent = getChallengeUrl();
+}
+
+function taskTitle(id){ return t().taskNames[id][0]; }
+
+function awardTask(taskId, token){
+  const task = TASKS.find(x=>x.id===taskId && x.token===token);
+  if(!task){
+    flash(t().invalidQR,true);
+    return false;
+  }
+
+  if(!completed.includes(task.id)){
+    completed.push(task.id);
+    save();
+    render();
+    flash(t().newlyDone(taskTitle(task.id),completed.length));
+  } else {
+    flash(t().alreadyDone(taskTitle(task.id)));
+  }
+  return true;
+}
+
+function processUrl(raw){
+  try{
+    const u = new URL(raw,location.href);
+    const task = u.searchParams.get("task");
+    const token = u.searchParams.get("token");
+    if(task && token) return awardTask(task,token);
+  }catch(e){}
+  flash(t().invalidTrail,true);
+  return false;
+}
+
+async function startScanner(){
+  if(scannerRunning) return;
+
+  const reader = document.getElementById("reader");
+  reader.classList.remove("hidden");
+  document.getElementById("startScanBtn").classList.add("hidden");
+  document.getElementById("stopScanBtn").classList.remove("hidden");
+
+  if(typeof Html5Qrcode === "undefined"){
+    flash(t().libraryFail,true);
+    return;
+  }
+
+  scanner = new Html5Qrcode("reader");
+
+  try{
+    await scanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      decodedText=>{
+        if(processUrl(decodedText)) stopScanner();
+      },
+      ()=>{}
+    );
+    scannerRunning = true;
+  }catch(err){
+    flash(t().cameraFail,true);
+    stopScanner();
+  }
+}
+
+async function stopScanner(){
+  try{
+    if(scanner && scannerRunning) await scanner.stop();
+    if(scanner) await scanner.clear();
+  }catch(e){}
+  scannerRunning=false;
+  scanner=null;
+  document.getElementById("reader").classList.add("hidden");
+  document.getElementById("startScanBtn").classList.remove("hidden");
+  document.getElementById("stopScanBtn").classList.add("hidden");
+}
+
+function resetTrail(){
+  if(confirm(t().resetConfirm)){
+    completed=[];
+    localStorage.removeItem("bioTrailV3");
+    render();
+    flash(t().resetDone);
+    history.replaceState({}, "", location.pathname);
+  }
+}
+
+function setName(){
+  const value = document.getElementById("name").value.trim();
+  document.getElementById("visitor").textContent = value || t().museumVisitor;
+}
+
+function getChallengeUrl(){
+  const name = document.getElementById("challengerName")?.value.trim() || "";
+  const u = new URL(BASE_URL);
+  u.searchParams.set("challenge","1");
+  u.searchParams.set("lang",lang);
+  if(name) u.searchParams.set("from",name);
+  return u.toString();
+}
+
+async function copyChallengeLink(){
+  const url = getChallengeUrl();
+  try{
+    await navigator.clipboard.writeText(url);
+    document.getElementById("challengeLinkText").textContent = url;
+    flash(t().copied);
+  }catch(e){
+    document.getElementById("challengeLinkText").textContent = url;
+    flash(t().copyFail,true);
+  }
+}
+
+async function shareChallenge(){
+  const name = document.getElementById("challengerName").value.trim();
+  const url = getChallengeUrl();
+  const text = `${t().challengeShareText(name)}\n${url}`;
+
+  try{
+    if(navigator.share){
+      await navigator.share({
+        title: lang==="sv" ? "Biodiversity Discovery Trail – Utmaning" : "Biodiversity Discovery Trail – Challenge",
+        text
+      });
+    }else{
+      await navigator.clipboard.writeText(text);
+      flash(t().copied);
+    }
+  }catch(e){}
+}
+
+function updateChallengeInvite(){
+  const p = new URLSearchParams(location.search);
+  const isChallenge = p.get("challenge")==="1";
+  const box = document.getElementById("challengeInvite");
+  box.classList.toggle("hidden", !isChallenge);
+
+  if(isChallenge){
+    const from = p.get("from");
+    document.getElementById("challengeFrom").textContent =
+      from ? t().challengedFromNamed(from) : t().challengedFromDefault;
+  }
+}
+
+function loadQrImage(){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=reject;
+    img.src="qr-codes/06-challenge-a-friend.png";
+  });
+}
+
+async function certificateCanvas(){
+  setName();
+  const name=document.getElementById("visitor").textContent;
+  const c=document.createElement("canvas");
+  c.width=1080; c.height=1920;
+  const x=c.getContext("2d");
+
+  const g=x.createLinearGradient(0,0,1080,1920);
+  g.addColorStop(0,"#173d2d"); g.addColorStop(1,"#315f45");
+  x.fillStyle=g; x.fillRect(0,0,c.width,c.height);
+
+  x.strokeStyle="#d8c784"; x.lineWidth=14; x.strokeRect(55,55,970,1810);
+  x.textAlign="center"; x.fillStyle="white";
+
+  x.font="110px system-ui"; x.fillText("🏆",540,300);
+  x.font="700 34px system-ui";
+  x.fillText(lang==="sv" ? "DIGITAL PRESTATION" : "DIGITAL ACHIEVEMENT",540,405);
+
+  x.font="800 88px system-ui"; x.fillText("Biodiversity",540,565);
+  x.fillText("Explorer",540,670);
+
+  x.font="40px system-ui";
+  x.fillText(lang==="sv" ? "Detta intygar att" : "This certifies that",540,790);
+
+  x.font="800 62px system-ui"; x.fillText(name,540,890);
+
+  x.font="38px system-ui";
+  if(lang==="sv"){
+    x.fillText("har klarat alla 5 utmaningar om",540,1000);
+    x.fillText("biologisk mångfald.",540,1055);
+  }else{
+    x.fillText("completed all 5 Biodiversity Discovery",540,1000);
+    x.fillText("Trail challenges.",540,1055);
+  }
+
+  x.font="56px system-ui"; x.fillText("🐦  🐟  🐞  🌱  🌍",540,1180);
+
+  try{
+    const qr = await loadQrImage();
+    x.fillStyle="white";
+    x.fillRect(390,1235,300,300);
+    x.drawImage(qr,410,1255,260,260);
+  }catch(e){}
+
+  x.font="700 29px system-ui";
+  x.fillStyle="white";
+  x.fillText(lang==="sv" ? "Kan du klara alla fem?" : "Can you complete all five?",540,1590);
+
+  x.font="27px system-ui";
+  x.fillText(lang==="sv" ? "Skanna QR-koden och anta utmaningen." : "Scan the QR code and take the challenge.",540,1640);
+
+  x.font="27px system-ui";
+  x.fillStyle="#dfe9e2";
+  x.fillText("Gothenburg Natural History Museum",540,1745);
+  x.fillText(new Date().toLocaleDateString(lang==="sv" ? "sv-SE" : "en-GB"),540,1795);
+
+  return c;
+}
+
+async function downloadCertificate(){
+  const c=await certificateCanvas();
+  const a=document.createElement("a");
+  a.download="biodiversity-explorer-certificate.png";
+  a.href=c.toDataURL("image/png");
+  a.click();
+}
+
+async function shareCertificate(){
+  const c=await certificateCanvas();
+  c.toBlob(async blob=>{
+    const file=new File([blob],"biodiversity-explorer-certificate.png",{type:"image/png"});
+    const url=getChallengeUrl();
+    const text=`${t().certShareText}\n${url}`;
+
+    try{
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({
+          title:"Biodiversity Explorer",
+          text,
+          files:[file]
+        });
+      }else if(navigator.share){
+        await navigator.share({title:"Biodiversity Explorer",text});
+      }else{
+        downloadCertificate();
+        await navigator.clipboard.writeText(text);
+        flash(t().copied);
+      }
+    }catch(e){}
+  },"image/png");
+}
+
+(function initIncoming(){
+  const p=new URLSearchParams(location.search);
+
+  const urlLang=p.get("lang");
+  if(urlLang==="sv" || urlLang==="en"){
+    lang=urlLang;
+    localStorage.setItem("bioTrailLang",lang);
+  }
+
+  const task=p.get("task"), token=p.get("token");
+  if(task && token){
+    setTimeout(()=>{
+      awardTask(task,token);
+      const clean = new URL(location.href);
+      clean.searchParams.delete("task");
+      clean.searchParams.delete("token");
+      history.replaceState({}, "", clean.pathname + clean.search);
+    },250);
+  }
+})();
+
+document.getElementById("challengerName").addEventListener("input",()=>{
+  document.getElementById("challengeLinkText").textContent=getChallengeUrl();
+});
+
+setLang(lang);
+</script>
+</body>
+</html>
