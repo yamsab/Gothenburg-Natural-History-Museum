@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Biodiversity Discovery Trail</title>
+<style>
+:root{--bg:#f3f6ef;--card:#fff;--ink:#183126;--green:#39704f;--soft:#dce8d9}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+main{max-width:520px;margin:auto;padding:22px}.hero{padding:24px 4px}.hero h1{font-size:2rem;margin:.2rem 0}.card{background:var(--card);border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 6px 25px #0000000d}
+.progress{height:12px;background:#e6e9e3;border-radius:10px;overflow:hidden}.bar{height:100%;background:var(--green);width:0;transition:.3s}
+.task{display:flex;gap:12px;align-items:center}.icon{font-size:28px}.task h3{margin:0}.task p{margin:4px 0;color:#53645b}
+button,a.btn{border:0;border-radius:14px;padding:13px 16px;background:var(--green);color:white;font-weight:700;font-size:1rem;text-decoration:none;display:inline-block;cursor:pointer}
+button.secondary{background:#e2eadf;color:var(--ink)}.done{outline:2px solid #9bbd9c}.hidden{display:none}
+#cert{background:linear-gradient(145deg,#173d2d,#4f7d59);color:white;border-radius:22px;padding:32px 22px;text-align:center;min-height:420px;display:flex;flex-direction:column;justify-content:center}
+#cert h2{font-size:2.2rem;margin:.3rem}#cert .seal{font-size:70px}.small{font-size:.88rem;color:#66756d}
+.scanbox{background:#17251f;color:#fff;padding:16px;border-radius:16px;margin:12px 0;word-break:break-all}
+</style>
+</head>
+<body><main>
+<section class="hero"><div>🌿 GOTHENBURG NATURAL HISTORY MUSEUM</div><h1>Biodiversity Discovery Trail</h1><p>Explore. Scan. Discover. Complete all five challenges to earn your Biodiversity Explorer certificate.</p></section>
+<div class="card"><b id="count">0/5 completed</b><div class="progress"><div id="bar" class="bar"></div></div></div>
+<div id="tasks"></div>
+<div class="card">
+<h2>QR scanner demo</h2><p>For this prototype, tap a task's <b>Scan QR</b> button. In the museum, the same verification happens after scanning the QR placed at that exhibit.</p>
+<div id="scanResult" class="scanbox">Waiting for a QR code…</div>
+</div>
+<div id="award" class="card hidden">
+<div id="cert"><div class="seal">🏆</div><div>OFFICIAL DIGITAL ACHIEVEMENT</div><h2>Biodiversity Explorer</h2><p>This certifies that</p><h3 id="visitor">Museum Explorer</h3><p>completed all 5 Biodiversity Discovery challenges.</p><p>🌿 🐦 🐟 🐞 🌍</p><small>Gothenburg Natural History Museum • Discovery Trail</small></div>
+<p><input id="name" placeholder="Your name (optional)" style="width:100%;padding:13px;border:1px solid #ccd5ce;border-radius:12px;margin:12px 0"></p>
+<button onclick="setName()">Add name</button> <button class="secondary" onclick="shareAward()">Share achievement</button>
+<p class="small">On supported phones, Share opens the system share sheet, where Instagram may be selected if installed.</p>
+</div>
+<button class="secondary" onclick="resetTrail()">Reset prototype</button>
+</main>
+<script>
+const tasks=[
+["🐦","Hidden Diorama","Find the historical bird diorama and discover one species.","BIRD-7FK29"],
+["🐟","Life Below Water","Find the fish exhibit and identify an adaptation.","FISH-3PX81"],
+["🐞","Tiny but Important","Discover why insects matter to biodiversity.","INSECT-9QM42"],
+["🌱","Conservation Story","Find an example of how species or habitats are protected.","SAVE-5TR17"],
+["🌍","Gothenburg Connection","Find a biodiversity story connected to your local environment.","GBG-2LN63"]
+];
+let done=JSON.parse(localStorage.getItem("bioTrail")||"[]");
+function render(){
+ let box=document.getElementById("tasks");box.innerHTML="";
+ tasks.forEach((t,i)=>{let d=done.includes(i);box.innerHTML+=`<div class="card task ${d?'done':''}"><div class="icon">${d?'✅':t[0]}</div><div style="flex:1"><h3>${i+1}. ${t[1]}</h3><p>${t[2]}</p><button onclick="scan(${i})">${d?'Scan again':'Scan QR'}</button></div></div>`});
+ document.getElementById("count").textContent=`${done.length}/5 completed`;
+ document.getElementById("bar").style.width=(done.length/5*100)+"%";
+ document.getElementById("award").classList.toggle("hidden",done.length<5);
+}
+function scan(i){
+ document.getElementById("scanResult").innerHTML=`✅ Genuine trail code verified:<br><b>${tasks[i][3]}</b><br>${tasks[i][1]} completed!`;
+ if(!done.includes(i)){done.push(i);localStorage.setItem("bioTrail",JSON.stringify(done));render();}
+}
+function resetTrail(){done=[];localStorage.removeItem("bioTrail");document.getElementById("scanResult").textContent="Waiting for a QR code…";render()}
+function setName(){document.getElementById("visitor").textContent=document.getElementById("name").value.trim()||"Museum Explorer"}
+async function shareAward(){
+ setName();
+ const txt=`🏆 I completed the Biodiversity Discovery Trail and earned the Biodiversity Explorer achievement!`;
+ if(navigator.share){try{await navigator.share({title:"Biodiversity Explorer",text:txt});}catch(e){}}
+ else{await navigator.clipboard.writeText(txt);alert("Achievement text copied. You can paste it into Instagram.");}
+}
+render();
+</script></body></html>
