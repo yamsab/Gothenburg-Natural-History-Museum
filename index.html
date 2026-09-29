@@ -35,7 +35,11 @@
 .cert{background:var(--paper);border-radius:14px;padding:24px;text-align:center;box-shadow:0 12px 35px #0002;margin-top:12px}
 .cert h1{font:900 2.1rem system-ui;color:var(--green);margin:.3rem}.cert h2{font:800 1.45rem system-ui;color:var(--brown)}
 .cert input{border:0;border-bottom:2px dotted #735f47;background:transparent;text-align:center;font:1.4rem Georgia;max-width:90%;padding:8px}
-.cert img{width:170px;max-width:48%;border-radius:50%;mix-blend-mode:multiply}.small{font:1rem/1.45 system-ui;color:#665e54}
+.cert img{width:170px;max-width:48%;border-radius:50%}.small{font:1rem/1.45 system-ui;color:#665e54}
+.photo-wrap{width:190px;height:190px;max-width:60vw;max-height:60vw;margin:16px auto;border:3px dashed #9b7a52;border-radius:50%;overflow:hidden;background:#fff8ea;display:flex;align-items:center;justify-content:center}
+.photo-wrap img{width:100%;height:100%;object-fit:cover;max-width:none;border-radius:50%}
+.photo-placeholder{font:700 .9rem/1.35 system-ui;color:#7a6a58;padding:18px;text-align:center}
+.photo-input{display:none}
 .sharebox{border:1px dashed #958875;border-radius:14px;padding:14px;margin-top:16px}
 .footer{text-align:center;color:#777066;font:.75rem system-ui;margin-top:20px}
 </style>
@@ -125,8 +129,110 @@ async function stopScanner(){try{if(scanner&&scanning)await scanner.stop();if(sc
 function processQr(raw){try{let u=new URL(raw,location.href),n=Number(u.searchParams.get("discovery")),tok=u.searchParams.get("token");if(n>=1&&n<=4&&TOKENS[n]===tok){complete(n);return true}}catch(e){}notice(T().bad,true);return false}
 function complete(n){if(!done.includes(n)){done.push(n);done.sort()}idx=n+1;save();render();notice(lang==="sv"?`Discovery ${String(n).padStart(2,"0")} klar!`:`Discovery ${String(n).padStart(2,"0")} completed!`)}
 
-function certMarkup(){let name=(localStorage.getItem("npName")|| (lang==="sv"?"Naturutforskare":"Nature Explorer")).replace(/"/g,"&quot;");return `<div class="cert"><div style="color:var(--brown);letter-spacing:.25em">• • • 🌿 • • •</div><h1>${lang==="sv"?"NATURUTFORSKAR-DIPLOM":"NATURE EXPLORER"}</h1>${lang==="en"?`<h2>CERTIFICATE</h2>`:""}<p class="small">${lang==="sv"?"Detta intygar att":"This certifies that"}</p><input id="certName" value="${name}"><p class="small">${lang==="sv"?"har genomfört Nature Passport – Biodiversity Discovery Trail och upptäckt hur en del av naturen kan påverka många andra.":"completed the Nature Passport Biodiversity Discovery Trail and discovered how one part of nature can affect many others."}</p><img src="assets/stamp-04.jpg"><div class="actions"><button class="btn" onclick="downloadCert()">⬇️ ${lang==="sv"?"Spara diplom":"Save certificate"}</button><button class="btn secondary" onclick="shareCert()">📤 ${lang==="sv"?"Dela":"Share"}</button></div><div class="sharebox"><b>${lang==="sv"?"🎯 Utmana en vän":"🎯 Challenge a friend"}</b><p class="small">${lang==="sv"?"Dela länken. Vännen måste fortfarande besöka museet och skanna alla fyra Discovery-koder.":"Share the link. Your friend must still visit the museum and scan all four Discovery codes."}</p><button class="btn" onclick="shareChallenge()">${lang==="sv"?"Utmana en vän":"Challenge a friend"}</button></div></div>`}
-async function certCanvas(){let c=document.createElement("canvas");c.width=1080;c.height=1528;let x=c.getContext("2d");x.fillStyle="#f5eddd";x.fillRect(0,0,1080,1528);x.textAlign="center";x.fillStyle="#58643b";x.font="800 72px system-ui";x.fillText(lang==="sv"?"NATURUTFORSKAR-DIPLOM":"NATURE EXPLORER",540,260);if(lang==="en"){x.fillStyle="#9a5c1f";x.fillText("CERTIFICATE",540,350)}x.fillStyle="#493b2f";x.font="38px system-ui";x.fillText(lang==="sv"?"Detta intygar att":"This certifies that",540,475);let n=(document.getElementById("certName")?.value||"Nature Explorer");x.font="700 58px system-ui";x.fillText(n,540,600);x.font="34px system-ui";let lines=lang==="sv"?["har genomfört Nature Passport","Biodiversity Discovery Trail och upptäckt","hur en del av naturen kan påverka många andra."]:["completed the Nature Passport","Biodiversity Discovery Trail and discovered","how one part of nature can affect many others."];lines.forEach((s,i)=>x.fillText(s,540,735+i*52));let im=await new Promise(r=>{let i=new Image();i.onload=()=>r(i);i.src="assets/stamp-04.jpg"});x.drawImage(im,390,975,300,300);x.font="28px system-ui";x.fillText(new Date().toLocaleDateString(lang==="sv"?"sv-SE":"en-GB"),540,1380);return c}
+function certMarkup(){
+ let name=(localStorage.getItem("npName")|| (lang==="sv"?"Naturutforskare":"Nature Explorer")).replace(/"/g,"&quot;");
+ let photo=localStorage.getItem("npPhoto")||"";
+ return `<div class="cert">
+   <div style="color:var(--brown);letter-spacing:.25em">• • • 🌿 • • •</div>
+   <h1>${lang==="sv"?"NATURUTFORSKAR-DIPLOM":"NATURE EXPLORER"}</h1>
+   ${lang==="en"?`<h2>CERTIFICATE</h2>`:""}
+   <p class="small">${lang==="sv"?"Detta intygar att":"This certifies that"}</p>
+   <input id="certName" value="${name}">
+   <div class="photo-wrap" id="photoWrap">
+     ${photo
+       ? `<img id="certPhoto" src="${photo}" alt="Explorer photo">`
+       : `<div class="photo-placeholder" id="photoPlaceholder">${lang==="sv"?"Ta ett foto eller välj en bild":"Take a photo or choose an image"}</div>`}
+   </div>
+   <input id="photoInput" class="photo-input" type="file" accept="image/*" capture="user" onchange="handlePhoto(event)">
+   <div class="actions">
+     <button class="btn secondary" onclick="document.getElementById('photoInput').click()">📷 ${lang==="sv"?"Ta/välj foto":"Take/choose photo"}</button>
+     ${photo?`<button class="btn secondary" onclick="removePhoto()">✕ ${lang==="sv"?"Ta bort foto":"Remove photo"}</button>`:""}
+   </div>
+   <p class="small">${lang==="sv"
+     ?"har genomfört Nature Passport – Biodiversity Discovery Trail och upptäckt hur en del av naturen kan påverka många andra."
+     :"completed the Nature Passport Biodiversity Discovery Trail and discovered how one part of nature can affect many others."}</p>
+   <div class="actions">
+     <button class="btn" onclick="downloadCert()">⬇️ ${lang==="sv"?"Spara diplom":"Save certificate"}</button>
+     <button class="btn secondary" onclick="shareCert()">📤 ${lang==="sv"?"Dela":"Share"}</button>
+   </div>
+   <div class="sharebox">
+     <b>${lang==="sv"?"🎯 Utmana en vän":"🎯 Challenge a friend"}</b>
+     <p class="small">${lang==="sv"
+       ?"Dela länken. Vännen måste fortfarande besöka museet och skanna alla fyra Discovery-koder."
+       :"Share the link. Your friend must still visit the museum and scan all four Discovery codes."}</p>
+     <button class="btn" onclick="shareChallenge()">${lang==="sv"?"Utmana en vän":"Challenge a friend"}</button>
+   </div>
+ </div>`;
+}
+
+function handlePhoto(event){
+ const file=event.target.files&&event.target.files[0];
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=e=>{
+   const img=new Image();
+   img.onload=()=>{
+     const size=600;
+     const c=document.createElement("canvas");
+     c.width=size;c.height=size;
+     const x=c.getContext("2d");
+     const side=Math.min(img.width,img.height);
+     const sx=(img.width-side)/2, sy=(img.height-side)/2;
+     x.drawImage(img,sx,sy,side,side,0,0,size,size);
+     const data=c.toDataURL("image/jpeg",0.82);
+     localStorage.setItem("npPhoto",data);
+     render();
+   };
+   img.src=e.target.result;
+ };
+ reader.readAsDataURL(file);
+}
+
+function removePhoto(){
+ localStorage.removeItem("npPhoto");
+ render();
+}
+
+async function certCanvas(){
+ let c=document.createElement("canvas");c.width=1080;c.height=1528;let x=c.getContext("2d");
+ x.fillStyle="#f5eddd";x.fillRect(0,0,1080,1528);
+ x.textAlign="center";x.fillStyle="#58643b";x.font="800 72px system-ui";
+ x.fillText(lang==="sv"?"NATURUTFORSKAR-DIPLOM":"NATURE EXPLORER",540,220);
+ if(lang==="en"){x.fillStyle="#9a5c1f";x.fillText("CERTIFICATE",540,305)}
+ x.fillStyle="#493b2f";x.font="38px system-ui";
+ x.fillText(lang==="sv"?"Detta intygar att":"This certifies that",540,400);
+ let n=(document.getElementById("certName")?.value||"Nature Explorer");
+ x.font="700 58px system-ui";x.fillText(n,540,510);
+
+ // Explorer photo replaces the old Final Discovery stamp/logo.
+ let photo=localStorage.getItem("npPhoto");
+ if(photo){
+   let im=await new Promise(r=>{let i=new Image();i.onload=()=>r(i);i.src=photo});
+   x.save();
+   x.beginPath();
+   x.arc(540,745,170,0,Math.PI*2);
+   x.clip();
+   x.drawImage(im,370,575,340,340);
+   x.restore();
+   x.strokeStyle="#9a5c1f";x.lineWidth=10;x.beginPath();x.arc(540,745,175,0,Math.PI*2);x.stroke();
+ }else{
+   x.strokeStyle="#9a5c1f";x.lineWidth=6;x.setLineDash([14,12]);
+   x.beginPath();x.arc(540,745,170,0,Math.PI*2);x.stroke();x.setLineDash([]);
+   x.fillStyle="#7b6b59";x.font="30px system-ui";
+   x.fillText(lang==="sv"?"Lägg till ditt foto":"Add your photo",540,750);
+ }
+
+ x.fillStyle="#493b2f";x.font="34px system-ui";
+ let lines=lang==="sv"
+   ?["har genomfört Nature Passport","Biodiversity Discovery Trail och upptäckt","hur en del av naturen kan påverka många andra."]
+   :["completed the Nature Passport","Biodiversity Discovery Trail and discovered","how one part of nature can affect many others."];
+ lines.forEach((s,i)=>x.fillText(s,540,1040+i*52));
+ x.font="28px system-ui";
+ x.fillText(new Date().toLocaleDateString(lang==="sv"?"sv-SE":"en-GB"),540,1370);
+ x.fillStyle="#665e54";x.font="26px system-ui";
+ x.fillText("Göteborgs Naturhistoriska Museum",540,1430);
+ return c
+}
 async function downloadCert(){let c=await certCanvas(),a=document.createElement("a");a.download="nature-explorer-certificate.png";a.href=c.toDataURL("image/png");a.click()}
 async function shareCert(){let c=await certCanvas();c.toBlob(async b=>{let f=new File([b],"nature-explorer-certificate.png",{type:"image/png"}),txt=(lang==="sv"?"🏆 Jag klarade Nature Passport. Klarar du alla fyra Discovery-uppdrag? ":"🏆 I completed the Nature Passport. Can you complete all four Discovery tasks? ")+BASE+"?challenge=1";try{if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({title:"Nature Passport",text:txt,files:[f]});else if(navigator.share)await navigator.share({title:"Nature Passport",text:txt})}catch(e){}},"image/png")}
 async function shareChallenge(){let txt=(lang==="sv"?"🎯 Jag utmanar dig: Kan du klara alla fyra Discovery-uppdrag i Nature Passport? Besök museet och försök! ":"🎯 I challenge you: Can you complete all four Nature Passport Discovery tasks? Visit the museum and try! ")+BASE+"?challenge=1";try{if(navigator.share)await navigator.share({title:"Nature Passport Challenge",text:txt});else{await navigator.clipboard.writeText(txt);notice(lang==="sv"?"Utmaningen kopierades.":"Challenge copied.")}}catch(e){}}

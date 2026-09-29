@@ -22,3 +22,10 @@ Corrected the image mapping:
 - Discovery 01 QR/stamp = Forest Engineer / Discovery 01 beaver artwork
 - Discovery 02 QR/stamp = Tree Builder / Discovery 02 woodpecker artwork
 - Discovery 03 and Final Discovery remain unchanged
+
+
+## v4.2 — Personal photo certificate
+The final Nature Explorer certificate no longer shows the Final Discovery / Trail Complete stamp.
+Instead, the visitor can take a selfie or choose a photo from the phone. The image is cropped to a square,
+stored locally on the visitor's device, shown in a circular portrait area on the certificate, and included
+in the saved/shared certificate image.
