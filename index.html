@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#58643b">
+<title>Nature Passport — Biodiversity Discovery Trail</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--paper:#f5eddd;--green:#58643b;--brown:#9a5c1f;--ink:#41372d;--orange:#ca6c14}
+*{box-sizing:border-box} body{margin:0;background:#ece7dc;color:var(--ink);font-family:Georgia,serif}
+.app{max-width:760px;margin:auto;padding:8px 10px 90px}
+.top{position:sticky;top:0;z-index:20;background:#f5edddf2;backdrop-filter:blur(8px);padding:10px;border-radius:0 0 14px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #d2c8b8}
+.brand{font:800 .82rem system-ui;color:var(--green)} .langs{display:flex;gap:6px}
+.lang{border:1px solid #c9beaa;background:#fff;color:var(--green);border-radius:999px;padding:7px 10px;font-weight:800}
+.lang.active{background:var(--green);color:#fff}
+.challenge{margin:12px 0;background:var(--green);color:white;padding:14px;border-radius:14px;font-family:system-ui}
+.hidden{display:none!important}
+.status{background:#fff;margin:12px 0;padding:12px;border-radius:14px;font:600 .9rem system-ui;box-shadow:0 4px 18px #0000000d}
+.barbg{height:8px;background:#ded8cc;border-radius:999px;margin-top:7px;overflow:hidden}.bar{height:100%;background:var(--green);width:0;transition:.25s}
+.book{position:relative;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:0 12px 35px #0002;margin-top:12px}
+.book img.art{width:100%;display:block}
+.overlay{position:absolute;inset:0;pointer-events:none}.overlay input,.overlay textarea,.overlay img{pointer-events:auto}
+.name{position:absolute;left:17%;top:31.8%;width:39%;border:0;border-bottom:2px dotted #6c604d;background:transparent;font:1.35rem Georgia;color:#493a2e;outline:none}
+.found{position:absolute;left:18%;top:54.2%;width:42%;border:0;border-bottom:2px solid #686450;background:transparent;font:1.15rem Georgia;outline:none}
+.found.d2{top:58.0%;width:39%}.found.d3{top:54.1%;width:30%}
+.reflection{position:absolute;left:7%;top:76.6%;width:86%;height:12.5%;resize:none;background:#f5edddc9;border:1px dashed #78805e;border-radius:16px;padding:10px;font:1rem Georgia;outline:none}
+.stamp{position:absolute;width:25%;aspect-ratio:1/1;border-radius:50%;object-fit:contain;mix-blend-mode:multiply;transform:rotate(-5deg)}
+.s1{left:8%;top:64%}.s2{left:8%;top:63%}.s3{left:7.5%;top:63%}.s4{left:62%;top:61%}
+.trans{margin:10px 0;background:#fffaf1;border-left:5px solid var(--orange);border-radius:10px;padding:14px 16px;font:1rem/1.45 system-ui}.trans h3{margin:0 0 6px;color:var(--green)}.trans p{margin:.35rem 0}
+.actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:12px 0;font-family:system-ui}
+.btn{border:0;border-radius:14px;padding:11px 15px;background:var(--green);color:white;font-weight:800;cursor:pointer}.btn.secondary{background:#fff;color:var(--green);border:1px solid #cbbfae}.btn:disabled{opacity:.45}
+.reader{background:#fff;padding:10px;border-radius:14px;margin:10px 0}
+.notice{margin:10px 0;padding:12px;border-radius:12px;background:#e8f2e7;color:#315d38;font:700 .9rem system-ui}.notice.err{background:#f7e6e2;color:#7d2e27}
+.cert{background:var(--paper);border-radius:14px;padding:24px;text-align:center;box-shadow:0 12px 35px #0002;margin-top:12px}
+.cert h1{font:900 2.1rem system-ui;color:var(--green);margin:.3rem}.cert h2{font:800 1.45rem system-ui;color:var(--brown)}
+.cert input{border:0;border-bottom:2px dotted #735f47;background:transparent;text-align:center;font:1.4rem Georgia;max-width:90%;padding:8px}
+.cert img{width:170px;max-width:48%;border-radius:50%;mix-blend-mode:multiply}.small{font:1rem/1.45 system-ui;color:#665e54}
+.sharebox{border:1px dashed #958875;border-radius:14px;padding:14px;margin-top:16px}
+.footer{text-align:center;color:#777066;font:.75rem system-ui;margin-top:20px}
+</style>
+</head>
+<body><div class="app">
+<div class="top"><div class="brand">NATURE PASSPORT • DIGITAL PROTOTYPE</div><div class="langs"><button id="svBtn" class="lang" onclick="setLang('sv')">Svenska</button><button id="enBtn" class="lang active" onclick="setLang('en')">English</button></div></div>
+
+<div id="challenge" class="challenge hidden"><b id="challengeTitle"></b><div id="challengeText"></div></div>
+
+<div class="status">
+<div style="display:flex;justify-content:space-between;gap:8px"><span id="progressText"></span><span id="pageText"></span></div>
+<div class="barbg"><div id="bar" class="bar"></div></div>
+</div>
+
+<div id="notice" class="notice hidden"></div>
+<div id="page"></div>
+<div id="translation" class="trans hidden"></div>
+<div id="readerWrap" class="reader hidden"><div id="reader"></div><div class="actions"><button class="btn secondary" onclick="stopScanner()" id="stopBtn">Stop scanner</button></div></div>
+<div class="actions"><button id="prev" class="btn secondary" onclick="prevPage()">← Previous</button><button id="scan" class="btn" onclick="startScanner()">📷 Scan discovery QR</button><button id="next" class="btn" onclick="nextPage()">Next →</button></div>
+<div class="footer">GitHub Pages prototype • The museum website is not modified.</div>
+</div>
+
+<script>
+const BASE="https://yamsab.github.io/Gothenburg-Natural-History-Museum/";
+const TOKENS={1:"FOREST-ENGINEER-A7",2:"TREE-BUILDER-K4",3:"HIDDEN-NEIGHBOUR-Q9",4:"WINDOW-PAST-M2"};
+const PAGES=[
+{id:"cover",img:"assets/cover.jpg"},
+{id:"explorer",img:"assets/nature-explorer.jpg"},
+{id:"d1",img:"assets/discovery-01.jpg",d:1},
+{id:"d2",img:"assets/discovery-02.jpg",d:2},
+{id:"d3",img:"assets/discovery-03.jpg",d:3},
+{id:"d4",img:"assets/discovery-04.jpg",d:4},
+{id:"what",img:"assets/what-discovered.jpg",lock:true},
+{id:"thanks",img:"assets/thank-you.jpg",lock:true},
+{id:"certificate",cert:true,lock:true}
+];
+
+const SV={
+prog:n=>`${n}/4 upptäckter klara`,page:(n,t)=>`Sida ${n}/${t}`,prev:"← Föregående",next:"Nästa →",scan:"📷 Skanna Discovery-QR",stop:"Stoppa skannern",
+locked:"Slutför alla fyra Discovery-uppdragen först.",bad:"Detta är inte en giltig Discovery-kod.",camera:"Kameran kunde inte starta. Tillåt kameraåtkomst eller använd mobilens vanliga kamera.",
+challengeTitle:"Du har blivit utmanad!",challengeText:"Kan du klara alla fyra Discovery-uppdrag? Besök Göteborgs Naturhistoriska Museum, följ Nature Passport och skanna QR-koderna vid utställningarna.",
+tr:{
+cover:`<h3>Naturpass – Upptäck biologisk mångfald</h3><p>Samma Nature Passport som i den tryckta prototypen, nu som en digital upplevelse.</p>`,
+explorer:`<h3>Naturutforskare</h3><p>Skriv ditt namn direkt i passet.</p><p><b>Ditt uppdrag:</b> TITTA → HITTA → STÄMPLA. Din första ledtråd väntar.</p>`,
+d1:`<h3>Discovery 01 – Skogens ingenjör</h3><p>Något har förändrat skogen. Träd har fällts, men det finns inga maskiner. Kan du hitta djuret som är ansvarigt?</p><p>Nästa ledtråd: följ inte djuret – titta på vad det lämnar efter sig.</p>`,
+d2:`<h3>Discovery 02 – Spår i träden</h3><p>Titta närmare. Vissa träd blir svaga eller dör, men deras berättelse är inte slut. Kan du hitta hålen i trädet? Vem gjorde dem?</p><p>Byggaren kan lämna, men hemmet finns kvar. Vem kan flytta in?</p>`,
+d3:`<h3>Discovery 03 – Den gömda grannen</h3><p>Byggaren har lämnat, men hemmet är fortfarande användbart. Någon annan kan flytta in. Kan du hitta den gömda invånaren?</p>`,
+d4:`<h3>Discovery 04 – Ett fönster till det förflutna</h3><p>Hitta dioramorna, hitta rätt fönster och titta närmare. Vilka detaljer kan du upptäcka som du kanske missade först?</p>`,
+what:`<h3>Vad upptäckte du?</h3><p>Ett djur kan förändra sin miljö. Hål i svaga eller döda träd kan bli hem för andra djur. Vissa arter använder hem som skapats av andra.</p><p><b>Fundera:</b> Vad händer om en del av sambandet försvinner? Vilken påverkan får det på de andra delarna?</p>`,
+thanks:`<h3>Tack för att du utforskade!</h3><p>Fortsätt titta noggrant. Naturen är full av samband.</p>`,
+certificate:`<h3>Naturutforskar-diplom</h3><p>Efter de fyra upptäckterna och reflektionssidan skapas ett digitalt diplom som kan sparas och delas.</p>`
+}};
+const EN={prog:n=>`${n}/4 discoveries completed`,page:(n,t)=>`Page ${n}/${t}`,prev:"← Previous",next:"Next →",scan:"📷 Scan discovery QR",stop:"Stop scanner",locked:"Complete all four Discovery tasks first.",bad:"This is not a valid Discovery code.",camera:"Camera could not start. Allow camera access or use your phone's normal camera.",challengeTitle:"You have been challenged!",challengeText:"Can you complete all four Discovery tasks? Visit the Gothenburg Natural History Museum, follow the Nature Passport and scan the exhibit QR codes.",tr:{}};
+
+let lang=localStorage.getItem("npLang")||"en", idx=Number(localStorage.getItem("npPage")||0), done=JSON.parse(localStorage.getItem("npDone")||"[]"), scanner=null, scanning=false;
+function T(){return lang==="sv"?SV:EN} function save(){localStorage.setItem("npLang",lang);localStorage.setItem("npPage",idx);localStorage.setItem("npDone",JSON.stringify(done))}
+function notice(m,e=false){let n=document.getElementById("notice");n.textContent=m;n.className="notice"+(e?" err":"");n.classList.remove("hidden");setTimeout(()=>n.classList.add("hidden"),3500)}
+function setLang(l){lang=l;save();render()}
+function overlay(p){
+ if(p.id==="explorer")return `<input id="nameInput" class="name" placeholder="${lang==="sv"?"Ditt namn":"Your name"}">`;
+ if(p.d){let s=done.includes(p.d)?`<img class="stamp s${p.d}" src="assets/stamp-0${p.d}.jpg">`:"";let f="";
+  if(p.d===1)f=`<input id="found" class="found" placeholder="${lang==="sv"?"Jag hittade...":"I found..."}">`;
+  if(p.d===2)f=`<input id="found" class="found d2" placeholder="${lang==="sv"?"Jag hittade...":"I found..."}">`;
+  if(p.d===3)f=`<input id="found" class="found d3" placeholder="${lang==="sv"?"Jag hittade...":"I found..."}">`;
+  return f+s;
+ }
+ if(p.id==="what")return `<textarea id="reflection" class="reflection" placeholder="${lang==="sv"?"Vad händer om en del av sambandet försvinner? Vilken påverkan får det?":"What might happen if one part of this connection disappeared? What impact would it have?"}"></textarea>`;
+ return "";
+}
+function render(){
+ document.getElementById("svBtn").classList.toggle("active",lang==="sv");document.getElementById("enBtn").classList.toggle("active",lang==="en");
+ if(idx<0)idx=0;if(idx>=PAGES.length)idx=PAGES.length-1;let p=PAGES[idx];
+ if(p.lock&&done.length<4){idx=5;save();notice(T().locked,true);p=PAGES[idx]}
+ let box=document.getElementById("page");
+ if(p.cert)box.innerHTML=certMarkup();else box.innerHTML=`<div class="book"><img class="art" src="${p.img}"><div class="overlay">${overlay(p)}</div></div>`;
+ let tr=document.getElementById("translation"); if(lang==="sv"&&SV.tr[p.id]){tr.innerHTML=SV.tr[p.id];tr.classList.remove("hidden")}else tr.classList.add("hidden");
+ document.getElementById("progressText").textContent=T().prog(done.length);document.getElementById("pageText").textContent=T().page(idx+1,PAGES.length);document.getElementById("bar").style.width=(done.length/4*100)+"%";
+ document.getElementById("prev").textContent=T().prev;document.getElementById("next").textContent=T().next;document.getElementById("scan").textContent=T().scan;document.getElementById("stopBtn").textContent=T().stop;
+ document.getElementById("prev").disabled=idx===0;document.getElementById("next").disabled=idx===PAGES.length-1;document.getElementById("scan").classList.toggle("hidden",!p.d);
+ if(p.id==="explorer"){let i=document.getElementById("nameInput");i.value=localStorage.getItem("npName")||"";i.oninput=e=>localStorage.setItem("npName",e.target.value)}
+ if(p.d&&p.d<4){let f=document.getElementById("found");if(f){f.value=localStorage.getItem("npFound"+p.d)||"";f.oninput=e=>localStorage.setItem("npFound"+p.d,e.target.value)}}
+ if(p.id==="what"){let r=document.getElementById("reflection");r.value=localStorage.getItem("npReflection")||"";r.oninput=e=>localStorage.setItem("npReflection",e.target.value)}
+}
+function nextPage(){if(idx<PAGES.length-1){idx++;save();render();scrollTo({top:0,behavior:"smooth"})}} function prevPage(){if(idx>0){idx--;save();render();scrollTo({top:0,behavior:"smooth"})}}
+async function startScanner(){if(scanning)return;if(typeof Html5Qrcode==="undefined"){notice(T().camera,true);return}document.getElementById("readerWrap").classList.remove("hidden");scanner=new Html5Qrcode("reader");try{await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},t=>{if(processQr(t))stopScanner()},()=>{});scanning=true}catch(e){notice(T().camera,true);stopScanner()}}
+async function stopScanner(){try{if(scanner&&scanning)await scanner.stop();if(scanner)await scanner.clear()}catch(e){}scanner=null;scanning=false;document.getElementById("readerWrap").classList.add("hidden")}
+function processQr(raw){try{let u=new URL(raw,location.href),n=Number(u.searchParams.get("discovery")),tok=u.searchParams.get("token");if(n>=1&&n<=4&&TOKENS[n]===tok){complete(n);return true}}catch(e){}notice(T().bad,true);return false}
+function complete(n){if(!done.includes(n)){done.push(n);done.sort()}idx=n+1;save();render();notice(lang==="sv"?`Discovery ${String(n).padStart(2,"0")} klar!`:`Discovery ${String(n).padStart(2,"0")} completed!`)}
+
+function certMarkup(){let name=(localStorage.getItem("npName")|| (lang==="sv"?"Naturutforskare":"Nature Explorer")).replace(/"/g,"&quot;");return `<div class="cert"><div style="color:var(--brown);letter-spacing:.25em">• • • 🌿 • • •</div><h1>${lang==="sv"?"NATURUTFORSKAR-DIPLOM":"NATURE EXPLORER"}</h1>${lang==="en"?`<h2>CERTIFICATE</h2>`:""}<p class="small">${lang==="sv"?"Detta intygar att":"This certifies that"}</p><input id="certName" value="${name}"><p class="small">${lang==="sv"?"har genomfört Nature Passport – Biodiversity Discovery Trail och upptäckt hur en del av naturen kan påverka många andra.":"completed the Nature Passport Biodiversity Discovery Trail and discovered how one part of nature can affect many others."}</p><img src="assets/stamp-04.jpg"><div class="actions"><button class="btn" onclick="downloadCert()">⬇️ ${lang==="sv"?"Spara diplom":"Save certificate"}</button><button class="btn secondary" onclick="shareCert()">📤 ${lang==="sv"?"Dela":"Share"}</button></div><div class="sharebox"><b>${lang==="sv"?"🎯 Utmana en vän":"🎯 Challenge a friend"}</b><p class="small">${lang==="sv"?"Dela länken. Vännen måste fortfarande besöka museet och skanna alla fyra Discovery-koder.":"Share the link. Your friend must still visit the museum and scan all four Discovery codes."}</p><button class="btn" onclick="shareChallenge()">${lang==="sv"?"Utmana en vän":"Challenge a friend"}</button></div></div>`}
+async function certCanvas(){let c=document.createElement("canvas");c.width=1080;c.height=1528;let x=c.getContext("2d");x.fillStyle="#f5eddd";x.fillRect(0,0,1080,1528);x.textAlign="center";x.fillStyle="#58643b";x.font="800 72px system-ui";x.fillText(lang==="sv"?"NATURUTFORSKAR-DIPLOM":"NATURE EXPLORER",540,260);if(lang==="en"){x.fillStyle="#9a5c1f";x.fillText("CERTIFICATE",540,350)}x.fillStyle="#493b2f";x.font="38px system-ui";x.fillText(lang==="sv"?"Detta intygar att":"This certifies that",540,475);let n=(document.getElementById("certName")?.value||"Nature Explorer");x.font="700 58px system-ui";x.fillText(n,540,600);x.font="34px system-ui";let lines=lang==="sv"?["har genomfört Nature Passport","Biodiversity Discovery Trail och upptäckt","hur en del av naturen kan påverka många andra."]:["completed the Nature Passport","Biodiversity Discovery Trail and discovered","how one part of nature can affect many others."];lines.forEach((s,i)=>x.fillText(s,540,735+i*52));let im=await new Promise(r=>{let i=new Image();i.onload=()=>r(i);i.src="assets/stamp-04.jpg"});x.drawImage(im,390,975,300,300);x.font="28px system-ui";x.fillText(new Date().toLocaleDateString(lang==="sv"?"sv-SE":"en-GB"),540,1380);return c}
+async function downloadCert(){let c=await certCanvas(),a=document.createElement("a");a.download="nature-explorer-certificate.png";a.href=c.toDataURL("image/png");a.click()}
+async function shareCert(){let c=await certCanvas();c.toBlob(async b=>{let f=new File([b],"nature-explorer-certificate.png",{type:"image/png"}),txt=(lang==="sv"?"🏆 Jag klarade Nature Passport. Klarar du alla fyra Discovery-uppdrag? ":"🏆 I completed the Nature Passport. Can you complete all four Discovery tasks? ")+BASE+"?challenge=1";try{if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({title:"Nature Passport",text:txt,files:[f]});else if(navigator.share)await navigator.share({title:"Nature Passport",text:txt})}catch(e){}},"image/png")}
+async function shareChallenge(){let txt=(lang==="sv"?"🎯 Jag utmanar dig: Kan du klara alla fyra Discovery-uppdrag i Nature Passport? Besök museet och försök! ":"🎯 I challenge you: Can you complete all four Nature Passport Discovery tasks? Visit the museum and try! ")+BASE+"?challenge=1";try{if(navigator.share)await navigator.share({title:"Nature Passport Challenge",text:txt});else{await navigator.clipboard.writeText(txt);notice(lang==="sv"?"Utmaningen kopierades.":"Challenge copied.")}}catch(e){}}
+
+(function(){let q=new URLSearchParams(location.search);if(q.get("challenge")==="1"){document.getElementById("challenge").classList.remove("hidden");document.getElementById("challengeTitle").textContent=T().challengeTitle;document.getElementById("challengeText").textContent=T().challengeText}let n=Number(q.get("discovery")),tok=q.get("token");if(n>=1&&n<=4&&TOKENS[n]===tok){if(!done.includes(n)){done.push(n);done.sort()}idx=n+1;save();history.replaceState({},"",location.pathname)}setLang(lang)})();
+</script></body></html>

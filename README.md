@@ -1,28 +1,24 @@
-# Biodiversity Discovery Trail — Version 2
+# Nature Passport Online v4
 
-A GitHub Pages prototype for the Gothenburg Natural History Museum Biodiversity Discovery Trail.
+This rebuilds the previous online prototype so the digital experience mirrors the offline Nature Passport notebook.
 
-Live base URL:
-https://yamsab.github.io/Gothenburg-Natural-History-Museum/
+Sequence:
+1. Exact Nature Passport cover
+2. Nature Explorer/name page
+3. Discovery 01 — Forest Engineer
+4. Discovery 02 — Signs in the Trees
+5. Discovery 03 — Hidden Neighbour
+6. Discovery 04 — A Window to the Past
+7. What Did You Discover? reflection
+8. Thank You for Exploring
+9. Digital certificate + share + Challenge a Friend
 
-## What changed in Version 2
-- Real QR workflow: each printed QR opens a unique task URL.
-- Scanning a QR automatically records that challenge on the visitor's device.
-- Optional in-app camera scanner using `html5-qrcode`.
-- Progress persists in the browser with `localStorage`.
-- Completing all 5 challenges unlocks a certificate.
-- Certificate can be generated as a 1080×1920 PNG and shared using the phone's native share sheet.
-- Includes a START QR plus five task QR images.
+The uploaded notebook artwork is used directly. Digital inputs and stamps sit on top of the same artwork. Swedish mode keeps the exact artwork and adds Swedish translations below each page.
 
-## Prototype security note
-The task tokens are validated in client-side JavaScript, so this is suitable for a classroom/prototype demonstration, not for production security. A real deployment should validate signed/rotating tokens on a backend such as Firebase, Supabase, or another server-side service.
 
-## Files
-- `index.html` — replace the current GitHub Pages file with this one.
-- `qr-codes/00-start.png` — opens the trail.
-- `qr-codes/01-bird.png`
-- `qr-codes/02-fish.png`
-- `qr-codes/03-insect.png`
-- `qr-codes/04-conservation.png`
-- `qr-codes/05-gothenburg.png`
-- `print-qr-sheet.html` — printable QR sheet for your demonstration.
+## v4.1 correction
+Corrected the image mapping:
+- Cover = Nature Passport cover artwork
+- Discovery 01 QR/stamp = Forest Engineer / Discovery 01 beaver artwork
+- Discovery 02 QR/stamp = Tree Builder / Discovery 02 woodpecker artwork
+- Discovery 03 and Final Discovery remain unchanged
